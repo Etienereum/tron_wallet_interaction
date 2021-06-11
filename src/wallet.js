@@ -113,6 +113,7 @@ const createWallet = async () => {
     }
 }
 
+//Wasn't used in this code 
 const getBalance = async (hexAddr) => {
     const url = 'https://api.shasta.trongrid.io/wallet/getaccount';
     const options = {
