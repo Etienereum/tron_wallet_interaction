@@ -17,7 +17,6 @@ const utils = hdWallet.utils;
 let accountArr = {}
 let privkeyArr = []
 let addressMaster, hexAddrMaster
-const url = 'https://api.shasta.trongrid.io/wallet/getaccount';
     
 const generateSeed = async () => {
     const seedphrase = utils.generateMnemonic();
@@ -43,7 +42,7 @@ const createWallet = async () => {
     const isValidSeed = utils.validateMnemonic(seedphrase);
     
     if (isValidSeed) {
-        accountArr = await utils.generateAccountsWithMnemonic(seedphrase, 2);
+        accountArr = await utils.generateAccountsWithMnemonic(seedphrase, 10);
     } else
         throw new Error("Bad Seed Phrase")
     // console.log(accountArr)
@@ -80,55 +79,57 @@ const createWallet = async () => {
     console.log('Main Addr Bal', bal)
 
     // Read other Private keys and fund them from the 1st account
-    for (let i = 1; i <= privkeyArr.length();) {
-        let sent = await deposit(privkeyArr[i])
-        if (sent) {
-            let address = await utils.getAccountFromPrivateKey(privkeyArr[i])
-            let hexAddr = tronweb.address.toHex(address)
-            let balance = await getBalance(hexAddr)
+    for (let i = 1; i < privkeyArr.length; i++){
+        let address = await utils.getAccountFromPrivateKey(privkeyArr[i])
+        let hexAddr = tronweb.address.toHex(address)
+        let bal = await getBalance(hexAddr)
+        console.log(privkeyArr[i], address, hexAddr, bal);
+        console.log(hexAddrMaster, hexAddr, 10)
+
+        let transfer = await blockchainTX(hexAddrMaster, hexAddr, 10)
+        // console.log(transfer)
+        // if (transfer) {
             // Display all Wallet addresses.
-            console.log(`Balance of ${address}, is ${balance}`)
-        }
+            // let balance = await getBalance(hexAddr)
+            // console.log(`Balance of ${address}, is ${balance}`)
+        // } else
+        //     throw new Error('Tranfer was not successful')
     }
-    
-    // // Transfer Back all funds to 1st account
-    // for (let i = 1; i <= privkeyArr.length();) {
-    //     let withdraw = await withdrawal(privkeyArr[i], '10')
-    //     if (withdraw) {
-    //         let address = await utils.getAccountFromPrivateKey(privkeyArr[i])
-    //         let hexAddr = tronweb.address.toHex(address)
-    //         let balance = await getBalance(hexAddr)
-    //         // Display all Wallet addresses.
-    //         console.log(`Balance of ${address}, is ${balance}`)
-    //     }
-    // }
 }
 
 const getBalance = async (hexAddr) => {
+    const url = 'https://api.shasta.trongrid.io/wallet/getaccount';
+    const options = {
+        method: 'POST',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: hexAddrMaster })
+    };
+
+    return fetch(url, options).then(res => res.json())
+        .then((json) => { return json.balance })
+        .catch(err => console.error('error:' + err));
+}
+
+const blockchainTX = async (sender, receiver, amount) => {
+    const url = 'https://api.shasta.trongrid.io/wallet/createtransaction';    
     const options = {
         method: 'POST',
         headers: {
             Accept: 'application/json', 'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            address: hexAddrMaster
+            "to_address": receiver,
+            "owner_address!": sender,
+            "amount": amount
         })
     };
 
     return fetch(url, options).then(res => res.json())
         .then((json) => {
-            console.log(json.balance)
-            return json.balance
+            console.log(json)
+            return json
         })
         .catch(err => console.error('error:' + err));
-}
-
-// const withdrawal = async (receiver, amount) => {
-
-// }
-
-const deposit = async (receiver, amount) => {
-
 }
 
 createWallet()

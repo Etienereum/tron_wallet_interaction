@@ -9,11 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "bs58": "^4.0.1",
     "fs": "0.0.1-security",
     "node-fetch": "^2.6.1",
-    "prompts": "^2.4.1",
-    "tron-format-address": "^0.1.8",
     "tron-wallet-hd": "^2.0.2"
   }
 }
